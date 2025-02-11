@@ -268,7 +268,7 @@ dt_train = 0.1 # lower trains better for real dt, higher trains faster (max~0.2)
 #run_sim(track, car, FPS, -1, None, time_limit)
 
 # Watch the best driver
-# best_driver = Driver.load('best_driver.pkl') # trained with 100/100/45/0.02 (best with 50 FPS)
+# best_driver = Driver.load('files/best_driver.pkl') # trained with 100/100/45/0.02 (best with 50 FPS)
 # car.set(car_x, car_y, car_v, car_a)
 # fitness = run_sim(track, car, 50, -1, best_driver)
 
@@ -319,7 +319,7 @@ for g in range(num_generations):
 # stats.print_stats()
 
 # best_driver = drivers[0]
-# best_driver.save('best_driver.pkl')
+# best_driver.save('files/best_driver.pkl')
 # car.set(car_x, car_y, car_v, car_a)
 # fitness = run_sim(track, car, FPS, -1, best_driver) 
 
