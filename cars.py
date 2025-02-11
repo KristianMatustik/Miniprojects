@@ -61,6 +61,19 @@ class Car:
         new_rect = rotated_image.get_rect(center=(self.pos_x, self.pos_y))
         screen.blit(rotated_image, new_rect.topleft)
 
+        for offset in [-30, 0, 30]:
+            angle_rad = math.radians(self.angle + offset)
+            black_line_length = 50
+            red_line_length = 50
+
+            black_end_x = self.pos_x + black_line_length * math.sin(angle_rad)
+            black_end_y = self.pos_y - black_line_length * math.cos(angle_rad)
+            pg.draw.line(screen, (0, 0, 0), (self.pos_x, self.pos_y), (black_end_x, black_end_y), 2)
+
+            red_end_x = black_end_x + red_line_length * math.sin(angle_rad)
+            red_end_y = black_end_y - red_line_length * math.cos(angle_rad)
+            pg.draw.line(screen, (255, 0, 0), (black_end_x, black_end_y), (red_end_x, red_end_y), 2)
+
     def distance_to_edge(self, track, angle_offset=0):
         track_array = track.array
         radius = 0.5 * self.size_h
