@@ -15,9 +15,8 @@ class GameObject(ABC):
     def update(self, dt):
         self.pos_x+=self.speed_x*dt
         self.pos_y+=self.speed_y*dt
-  
 
-    #Check if overlaps boundry/object
+    #Check if overlaps boundry/other object
     def topOverlap(self, y):
         return self.pos_y < y
     def botOverlap(self, y):
@@ -33,7 +32,7 @@ class GameObject(ABC):
     def totalOverlap(self, other):
         return self.vertOverlap(other) and self.horOverlap(other)
     
-    #Correct position and speed if overlaps
+    #Correct position and speed if overlaps (could be refactored, made specific for ball/paddle/other objects)
     def topBounds(self, y):
         if self.topOverlap(y):
             self.pos_y=y
@@ -64,7 +63,8 @@ class GameObject(ABC):
     def draw(self):
         pass
 
-
+# Can collect powerups to make the game more fun (by catching them with paddle)
+# Blue increases paddle size, red ball speed, green paddle speed. Can stack up, each has limited duration
 class PowerUp(GameObject, ABC):
     def __init__(self, x, y, w, h, v, d):
         i = random.choice([0,1,2])
@@ -202,7 +202,7 @@ PU_H = 32
 PU_W = 32
 PU_V = 300    
 PU_T = 15       #How long do power ups last
-PU_G = 2       #How often on avg new powerups spawn
+PU_G = 2        #How often on avg new powerups spawn, seconds (exp. distribution)
 BALL_V = 300
 PADDLE_V = 200
 
@@ -231,7 +231,7 @@ while running:
     current_time = pg.time.get_ticks()  
     dt = (current_time - prevTime) / 1000
 
-    # Event handling
+    # Event handling, player controls
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
@@ -287,10 +287,8 @@ while running:
     if t<dt:
         powerUps.append(PowerUp(WIDTH/2,HEIGHT*random.random(),PU_W,PU_H,PU_V,PU_T))
 
-    # Clear screen
+    # Draw
     screen.fill(C_BACKGROUND)  
-
-    # Draw 
     ball.draw()
     for p in paddles:
         p.draw()
@@ -311,7 +309,7 @@ while running:
 
     pg.display.flip() 
     
-    # Game speed
+    # Control game speed
     clock.tick(FPS)
     prevTime = current_time
     if scored:

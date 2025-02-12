@@ -3,7 +3,7 @@ import math
 import numpy as np
 from matplotlib import pyplot as pp
 
-#school miniproject, solving sudoku using random changes and simulated annealing
+# School miniproject, solving sudoku using simulated annealing
 
 class Sudoku:
     def __init__(self, board):
@@ -26,6 +26,7 @@ class Sudoku:
             error+=abs(numbers[i]-1)
         return error
 
+    # First method, improved version bellow
     def error_total_1(self):
         error=0
         for i in range(9):
@@ -50,6 +51,7 @@ class Sudoku:
         
         return error
     
+    # Checking error only across blocks and 1 dimension, in the other its allways correct
     def error_total_2(self):
         error=0
         for i in range(9):
@@ -68,6 +70,7 @@ class Sudoku:
         
         return error
 
+    # First method, improved version bellow
     def solveAnnealing1(self):
         all_numbers = [i for i in range(1, 10) for _ in range(9)]
         for row in self.board:
@@ -113,7 +116,7 @@ class Sudoku:
                 return
 
 
-    #improved, one dimension solved from the start
+    # One dimension is solved from the start, change number only across the second
     def solveAnnealing2(self):
         for i in range(9):
             all_numbers = [i for i in range(1, 10)]

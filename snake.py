@@ -25,7 +25,7 @@ class Snake:
         for cell in self.body:
             if newHead==cell:
                 return False
-                                  
+        
         self.body.append(newHead)
         return True
 
@@ -64,7 +64,7 @@ snake = Snake(COLS,ROWS)
 running = True
 clock = pg.time.Clock()
 while running:
-    # Event handling
+    # Event handling, player controls
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
@@ -88,25 +88,21 @@ while running:
     if (apple==snake.body[-1]):
         apple = generate_apple(snake,COLS,ROWS)
 
-    # Clear screen
+    # Draw
     screen.fill(C_BACKGROUND)  
 
-    # Draw grid
     for row in range(ROWS):
         for col in range(COLS):
             rect = pg.Rect(col*CELL_W, row*CELL_H, CELL_W, CELL_H)
             pg.draw.rect(screen, C_GRID, rect, 1)
 
-    # Draw snake
     for i, cell in enumerate(snake.body):    
         l=len(snake.body)  
         COLOR = (C_TAIL[0]*(l-i)/l + C_HEAD[0]*i/l, C_TAIL[1]*(l-i)/l + C_HEAD[1]*i/l, C_TAIL[2]*(l-i)/l + C_HEAD[2]*i/l)
         pg.draw.rect(screen, COLOR, (cell[0]*CELL_W, cell[1]*CELL_H, CELL_W, CELL_H))
 
-    # Draw apple
     pg.draw.rect(screen, C_APPLE, (apple[0]*CELL_W, apple[1]*CELL_H, CELL_W, CELL_H))
 
-    # Update display
     pg.display.flip() 
 
     # Game speed

@@ -1,7 +1,9 @@
 import numpy as np
 
-#short script to find different combinations probabilities using Monte Carlo and compare hand strengths
-#not very efficient or smart, but was quick to code and does the job good enough anyway
+# Monte Carlo poker simulations
+# 1. func: find overall probabilities of having different combinations
+# 2. func: compare strengths of 2 hands, probabilities of winning, losing, splitting of each one
+# not very efficient, smart, etc, but was fun, easy and quick to code, also does the job quite good anyway
 
 class Deck52:      
     class Card:
@@ -77,12 +79,14 @@ class Deck52:
         last=-1
         counter=-1
         multi=[[],[],[],[]]      #single, pair, tri, quad
-               
+        
         straight_counter=1
         straight=-1
 
         self.sort()
-        for i in range(7):                                              #PREPROCESS
+
+        #PREPROCESS, check combinations
+        for i in range(7):                                              
             suite_counter[self.cards[i].suite].append(self.cards[i])    #flush
             if len(suite_counter[self.cards[i].suite])>4:
                 flush=self.cards[i].suite
@@ -103,6 +107,7 @@ class Deck52:
                 straight_counter=1
 
 
+        #EVALUATE combinations, made scoring system (terrible but does the job) to compare any 2 hands
         if straight!=-1 and flush!=-1:                                  #check straightflush
             count=1
             high=-1
@@ -153,7 +158,7 @@ class Deck52:
         if len(multi[1])==1:                                            #eval pair
             return 200000000000+100000000*(multi[1][0]+2)+1000000*(multi[0][len(multi[0])-1]+2)+10000*(multi[0][len(multi[0])-2]+2)+100*(multi[0][len(multi[0])-3]+2)
 
-        else:                                                           #eval high
+        else:                                                           #eval high card
             return 100000000000+100000000*(multi[0][len(multi[0])-1]+2)+1000000*(multi[0][len(multi[0])-2]+2) \
                     +10000*(multi[0][len(multi[0])-3]+2)+100*(multi[0][len(multi[0])-4]+2)+1*(multi[0][len(multi[0])-5]+2)       
 
@@ -162,6 +167,7 @@ class Deck52:
         self.cards.append(card)
 
 
+# Player 1: card1 value = P1_V1, card1 suite = P1_S1, etc. for card 2 player2, num of simulations = n
 def pokerHandComparison(P1_V1,P1_S1,P1_V2,P1_S2,P2_V1,P2_S1,P2_V2,P2_S2,n=1000000):
     deck = Deck52()
     hand1 = Deck52()

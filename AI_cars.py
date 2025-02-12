@@ -6,7 +6,7 @@ import pstats
 import pickle
 
 
-# Evolution algorithm, teaching self-driving cars to drive around a track
+# Reinforcment learning, evolution algorithm to teach NNs to drive cars around a track
 
 class Track:
     def __init__(self, image_path, width, height):
@@ -68,11 +68,11 @@ class Car:
         self.pos_y += self.__speed_y * dt
 
     def draw(self, screen):
-        rotated_image = pg.transform.rotate(self.image, -self.angle)  # Rotate clockwise
+        rotated_image = pg.transform.rotate(self.image, -self.angle)
         new_rect = rotated_image.get_rect(center=(self.pos_x, self.pos_y))
         screen.blit(rotated_image, new_rect.topleft)
 
-        for offset in [-30, 0, 30]:
+        for offset in [-30, 0, 30]: # Lines representing crash detection and distance messurement
             angle_rad = math.radians(self.angle + offset)
             red_line_length = self.size_h//2
             blue_line_length = self.size_h//2
@@ -85,11 +85,11 @@ class Car:
             blue_end_y = red_end_y - blue_line_length * math.cos(angle_rad)
             pg.draw.line(screen, (0, 0, 255), (red_end_x, red_end_y), (blue_end_x, blue_end_y), 2)
 
-    # This method takes most time, should be optimized (best route from discrete lines and some map - can do fast intercept check from their list)
-    # This implementation allows any track though, quick to draw in paint
+    # This method takes most time, should be optimized (maybe route from discrete lines, iterate them and calculate intersection)
+    # This implementation allows simple track specification though, simple B-W image
     def distance_to_edge(self, track, angle_offset=0):
         radius = 0.5 * self.size_h
-        step = 5
+        step = 5    # can be sped up by longer step, NN less acurate though, and can ignore thin walls
         distance = 0
         ang = math.radians(self.angle + angle_offset)
 
@@ -112,7 +112,7 @@ class Car:
     def distance_right(self, track):
         return self.distance_to_edge(track, 30)
 
-    def check_collision(self, track):
+    def check_collision(self, track):   #only at the front, same points as distance messurement (at d=0), enough for learning
         radius = 0.5 * self.size_h
 
         for offset in [-30, 0, 30]:
@@ -172,6 +172,8 @@ class Driver:
         with open(filename, 'rb') as f:
             return pickle.load(f)
 
+# Main method, runs sim, drawing to window if FPS is set, manual controls if no Driver specified
+# Returns distance traveled as fitness score for AI learning
 def run_sim(track, car, fps=math.inf, DT=-1, car_driver=None, max_time=math.inf):
     clock = pg.time.Clock()
     distance_traveled = 0
@@ -184,7 +186,7 @@ def run_sim(track, car, fps=math.inf, DT=-1, car_driver=None, max_time=math.inf)
     while running:
         current_time = pg.time.get_ticks()
 
-        # Calculate dt, use fixed value for training or faster drawing
+        # Calculate dt, use fixed specified value for fast training or sped up drawing
         if (DT == -1):
             dt = (current_time - prev_time) / 1000
         else:
@@ -196,7 +198,7 @@ def run_sim(track, car, fps=math.inf, DT=-1, car_driver=None, max_time=math.inf)
             running = False
             break
 
-        # Check window closed
+        # Check window closed. Need to fix so it doesn't crash on exit
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -216,15 +218,14 @@ def run_sim(track, car, fps=math.inf, DT=-1, car_driver=None, max_time=math.inf)
         else:
             car_driver.adjust_controls(track, car, dt)
 
-        # Calculate distance traveled, prevents counting loops
+        # Calculate distance traveled (fitness score for AI), prevents counting driving in circles
         new_x, new_y = car.pos_x, car.pos_y
         segment_dist = math.dist((old_x, old_y), (new_x, new_y))
         if all(math.dist((new_x, new_y), (vx, vy)) > 50 for vx, vy in visited_positions) and car.speed > 0:
             distance_traveled += segment_dist
             visited_positions.append((new_x, new_y))
             old_x, old_y = new_x, new_y
-
-        # Clear visited_positions after some size, speeds up training, allows more laps of circuit
+        # Clear visited_positions after some size, speeds up calculation, allows more laps of circuit
         if len(visited_positions) > 40:
             visited_positions = visited_positions[len(visited_positions)//2:]
 
@@ -239,7 +240,7 @@ def run_sim(track, car, fps=math.inf, DT=-1, car_driver=None, max_time=math.inf)
             clock.tick(fps)
         prev_time = current_time
 
-    # Evaluate score, distance travel, also want to incorporate speed/time left somehow, if the track is not circuit
+    # Evaluate score, distance travel, also good to incorporate speed/time left somehow if the track is not circuit
     return distance_traveled
 
 
@@ -258,13 +259,14 @@ car_v, car_a = 10, 0
 car = Car(car_x, car_y, car_v, car_a, car_w, car_h)
 
 FPS=25
+
 # Training specs
 num_drivers = 100
 num_generations = 50
-time_limit = 30 # lower time trains faster, need bit higher to complete track
-dt_train = 0.1 # lower trains better for real dt, higher trains faster (max~0.2)
+time_limit = 30 # lower time trains faster, need bit higher to complete whole track
+dt_train = 0.1 # higher trains faster, but can be inferior when used with other lower dt not trained on (eg. playing real speed 50FPS. max~0.2)
 
-# Manual control ride
+# Manual controls ride
 #run_sim(track, car, FPS, -1, None, time_limit)
 
 # Watch the best driver
@@ -280,7 +282,7 @@ for g in range(num_generations):
     for driver in drivers:
         car.set(car_x, car_y, car_v, car_a)
         dt=dt_train
-        #Adaptable dt for training - small is fast to train, but models can be inacurate with smaller dt. Now have a workaround (final sim with dt=0.1, but played faster)
+        #Adaptable dt for training - higher is fast to train, but models can be inacurate when run with smaller dt, better train it on the one used (drivers "overfitted" to track and parameters)
         #dt = dt_train - ((dt_train-1/FPS) * g / num_generations)
         fitness = run_sim(track, car, math.inf, dt, driver, time_limit)
         results.append((driver, fitness))
@@ -300,7 +302,7 @@ for g in range(num_generations):
         drivers = [r[0] for r in results]
         break
 
-    # Other gens mutate, 20 % best are kept, 40 % added from their mutations, 20 % next best also kept + 20 % from their mutations
+    # Other gens mutate, 20 % best are kept + 2x mutated, 20 % next best also kept + 1x mutated
     n = num_drivers // 5
     scale = 0.1*(num_generations-g)/num_generations
     new_drivers = []
@@ -314,6 +316,7 @@ for g in range(num_generations):
         new_drivers.append(results[i][0].copy().mutate(scale))
 
     drivers = new_drivers
+
 # stats = pstats.Stats(pr)
 # stats.sort_stats(pstats.SortKey.TIME)
 # stats.print_stats()
@@ -331,7 +334,7 @@ for i, driver in enumerate(drivers):
 for i, driver in enumerate(drivers):
     car.set(car_x, car_y, car_v, car_a)
     fitness = run_sim(track, car, FPS, dt_train, driver, time_limit)
-    #fitness = run_sim(track, car, FPS, -1, driver, time_limit) #can try running model at different dt, sims will be different from training
+    #fitness = run_sim(track, car, FPS, -1, driver, time_limit) #can try running model at different dt, driver might crash though, overfitted to training, taking corners with 0 reserve
     print(f"Driver {i}: {fitness}")
 
 

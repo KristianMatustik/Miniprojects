@@ -11,7 +11,7 @@ class mineField:
     #mines grid
     MINE=-1
     EMPTY=0
-    #NEIGHBOUR MINES=1,2,3,...
+    #MINES IN NEIGHBORHOOD =1,2,3,...
 
     #game state
     RUNNING = -1
@@ -110,7 +110,7 @@ def checkWin(mines, explored, N_MINES):
     return mineField.WON if notExplored==N_MINES else mineField.RUNNING
 
 def solveStep(mines, explored): #ALG for solving, how most people do it. Could be improved only with number of mines for possible endgame...
-    flagged=False               #...with some more complex logic, otherwise when no optimal play exists it waits for player inout, guess
+    flagged=False               #...with some more complex logic, otherwise when no optimal play exists it waits for player input
     for x, col in enumerate(mines):
         for y, _ in enumerate(col):
             count = 0
@@ -191,7 +191,7 @@ while running:
             running = False
         elif event.type == pg.KEYDOWN:
             event.key == pg.K_SPACE
-            solveStep(mines,explored)   #solving algorithm, kinda cheat, would disable in a gmae :) (works only with the known info though)
+            solveStep(mines,explored)   #solving algorithm, kinda cheat, would disable in a gmae :) (works only with the info known to player though, doesnt know unrevealed mines)
         elif event.type == pg.MOUSEBUTTONUP:
             x, y = event.pos
             x//=CELL_W
