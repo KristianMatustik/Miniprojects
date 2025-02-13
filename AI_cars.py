@@ -258,7 +258,7 @@ car_w, car_h = 25, 50
 car_v, car_a = 10, 0
 car = Car(car_x, car_y, car_v, car_a, car_w, car_h)
 
-FPS=25
+FPS=30
 
 # Training specs
 num_drivers = 100
@@ -270,13 +270,14 @@ dt_train = 0.1 # higher trains faster, but can be inferior when used with other 
 #run_sim(track, car, FPS, -1, None, time_limit)
 
 # Watch the best driver
-# best_driver = Driver.load('files/best_driver.pkl') # trained with 100/100/45/0.02 (best with 50 FPS)
+# best_driver = Driver.load('files/best_driver.pkl') # trained with 100/100/45/0.02 (best with 50 FPS) fitness 12017
 # car.set(car_x, car_y, car_v, car_a)
-# fitness = run_sim(track, car, 50, -1, best_driver)
+# fitness = run_sim(track, car, 50, 0.02, best_driver) #increase FPS from 50 to replay faster
 
 # Evolution algorithm
 # with cProfile.Profile() as pr:
 drivers = [Driver() for _ in range(num_drivers)]
+best_drivers=[]
 for g in range(num_generations):
     results = []
     for driver in drivers:
@@ -297,6 +298,9 @@ for g in range(num_generations):
     print(f"Avg: {avg_distance}")
     print(f"Best: {best_distance}")
 
+    #save best driver from each generation
+    best_drivers.append(results[0][0])
+
     # Last generation just sort by fitness
     if g == num_generations - 1:
         drivers = [r[0] for r in results]
@@ -306,36 +310,54 @@ for g in range(num_generations):
     n = num_drivers // 5
     scale = 0.1*(num_generations-g)/num_generations
     new_drivers = []
-    for i in range(n):
-        new_drivers.append(results[i][0])
-        new_drivers.append(results[i][0].copy().mutate(scale))
-        new_drivers.append(results[i][0].copy().mutate(scale))
+    for gen in range(n):
+        new_drivers.append(results[gen][0])
+        new_drivers.append(results[gen][0].copy().mutate(scale))
+        new_drivers.append(results[gen][0].copy().mutate(scale))
 
-    for i in range(n, 2*n):
-        new_drivers.append(results[i][0])
-        new_drivers.append(results[i][0].copy().mutate(scale))
+    for gen in range(n, 2*n):
+        new_drivers.append(results[gen][0])
+        new_drivers.append(results[gen][0].copy().mutate(scale))
 
     drivers = new_drivers
-
 # stats = pstats.Stats(pr)
 # stats.sort_stats(pstats.SortKey.TIME)
 # stats.print_stats()
 
-# best_driver = drivers[0]
-# best_driver.save('files/best_driver.pkl')
-# car.set(car_x, car_y, car_v, car_a)
-# fitness = run_sim(track, car, FPS, -1, best_driver) 
+# # Print fitness from last generation
+# for i, driver in enumerate(drivers):
+#     car.set(car_x, car_y, car_v, car_a)
+#     fitness = run_sim(track, car, math.inf, dt_train, driver, time_limit)
+#     print(f"Driver {i}: {fitness}")
 
-for i, driver in enumerate(drivers):
+# Play best driver from each generation ("first" gens will be played all, after that by steps (biggest progress at start))
+first = 10
+for gen in range(0, first):
     car.set(car_x, car_y, car_v, car_a)
-    fitness = run_sim(track, car, math.inf, dt_train, driver, time_limit)
-    print(f"Driver {i}: {fitness}")
-
-for i, driver in enumerate(drivers):
-    car.set(car_x, car_y, car_v, car_a)
-    fitness = run_sim(track, car, FPS, dt_train, driver, time_limit)
+    if gen!=0 and best_drivers[gen]==best_drivers[gen-1]:
+        print(f"Driver {gen}: {fitness} (same as previous)")
+        continue
+    fitness = run_sim(track, car, FPS, dt_train, best_drivers[gen], time_limit) #plays at 3x speed (30fps but steps are 0.1 s)
     #fitness = run_sim(track, car, FPS, -1, driver, time_limit) #can try running model at different dt, driver might crash though, overfitted to training, taking corners with 0 reserve
-    print(f"Driver {i}: {fitness}")
+    print(f"Driver {gen}: {fitness}")
 
+step=5
+for gen in range(first, num_generations, step):
+    car.set(car_x, car_y, car_v, car_a)
+    if gen!=0 and best_drivers[gen]==best_drivers[gen-step]:
+        print(f"Driver {gen}: {fitness} (same as previous)")
+        continue
+    fitness = run_sim(track, car, FPS, dt_train, best_drivers[gen], time_limit) #plays at 3x speed (30fps but steps are 0.1 s)
+    #fitness = run_sim(track, car, FPS, -1, driver, time_limit) #can try running model at different dt, driver might crash though, overfitted to training, taking corners with 0 reserve
+    print(f"Driver {gen}: {fitness}")
+
+# Play best driver
+# best_driver.save('files/best_driver.pkl')
+car.set(car_x, car_y, car_v, car_a)
+fitness = run_sim(track, car, math.inf, dt_train, drivers[0], time_limit) 
+print(f"Best Driver ({num_generations-1}): {fitness}")
+car.set(car_x, car_y, car_v, car_a)
+run_sim(track, car, FPS, dt_train, drivers[0]) 
+print("(Riding with no time limit)")
 
 pg.quit()
