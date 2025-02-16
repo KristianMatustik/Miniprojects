@@ -153,7 +153,7 @@ class NeuralNetwork:
     @staticmethod
     def load(filename):
         with open(filename, 'rb') as file:
-            return pickle.load(file) 
+            return pickle.load(file)
 
     def add_Layer_FullyConnected(self, n_input, n_output, activation):
         self.layers.append(self.Layer_FullyConnected(n_input, n_output, activation))
@@ -169,23 +169,27 @@ class NeuralNetwork:
 
     def trainBatch(self, inputs, targets, learning_rate, momentum, cost_function, cost_function_derivative):
         batch_size = inputs.shape[0]
+        cost = 0
+        accuracy = 0
         for i in range(batch_size):
             sample = inputs[i]
             target = targets[i]
             prediction = self.forward(sample)
-            cost = cost_function(prediction, target)
+            cost += cost_function(prediction, target)
+            accuracy += np.argmax(prediction) == np.argmax(target)
             derivative = cost_function_derivative(prediction, target)
             for layer in reversed(self.layers):
                 derivative = layer.backward(derivative, batch_size)
 
         for layer in self.layers:
-            layer.update(learning_rate, momentum)     
+            layer.update(learning_rate, momentum)
 
-    def train(self, data, batch_size, epochs, learning_rate, momentum, cost_function):
-        data = np.array(data)
-        data_t = data[:, 0]
-        data_inputs = data[:, 1:]
-        n_examples, n_input = data_inputs.shape
+        return cost/batch_size, accuracy/batch_size
+
+    def train(self, inputs, targets, batch_size, epochs, learning_rate, momentum, cost_function):
+        inputs = np.array(inputs)
+        targets = np.array(targets)
+        n_examples, n_input = inputs.shape
         n_batches = n_examples // batch_size
 
         if cost_function == NeuralNetwork.cost_mse:
@@ -198,29 +202,18 @@ class NeuralNetwork:
             raise ValueError("Invalid cost function")
         
         for epoch in range(epochs):
-            np.random.shuffle(data)
-            data_t = data[:, 0]
-            data_inputs = data[:, 1:]
-            data_targets = np.zeros((data_t.size, data_t.max()+1))
-            data_targets[np.arange(data_t.size), data_t] = 1
+            permutation = np.random.permutation(n_examples)
+            inputs = inputs[permutation]
+            targets = targets[permutation]
+            onehot_targets = np.zeros((targets.size, targets.max()+1))
+            onehot_targets[np.arange(targets.size), targets] = 1
+            cost = 0
+            accuracy = 0
             for i in range(n_batches):
-                batch_inputs = data_inputs[i*batch_size:(i+1)*batch_size]
-                batch_targets = data_targets[i*batch_size:(i+1)*batch_size]
-                self.trainBatch(batch_inputs, batch_targets, learning_rate, momentum, cost_function, cost_function_derivative)
-
-
-#np.random.seed(0)
-
-NN = NeuralNetwork()
-data = [[0,0,0],[0,1,1],[1,0,1],[1,1,0]]
-
-NN.add_Layer_FullyConnected(2,3, NeuralNetwork.ReLU)
-NN.add_Layer_FullyConnected(3,2, NeuralNetwork.softmax)
-NN.train(data, 2, 1000, 0.2, 0.5, NeuralNetwork.cost_mse)
-# NN.save("files/NN_XOR.pkl")
-
-# NN = NeuralNetwork.load("files/NN_XOR.pkl")
-
-for i in range(4):
-    print(data[i][:-1], data[i][-1])
-    print(NN.forward(data[i][:-1]), data[i][-1])
+                batch_inputs = inputs[i*batch_size:(i+1)*batch_size]
+                batch_targets = onehot_targets[i*batch_size:(i+1)*batch_size]
+                c, ac = self.trainBatch(batch_inputs, batch_targets, learning_rate, momentum, cost_function, cost_function_derivative)
+                cost += c
+                accuracy += ac
+                # print(f"Epoch {epoch+1}/{epochs}, Batch {i+1}/{n_batches}, Cost: {c}, Accuracy: {ac}")
+            print(f"Epoch {epoch+1}/{epochs}, Cost: {cost/n_batches}, Accuracy: {accuracy/n_batches}")
