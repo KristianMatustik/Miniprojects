@@ -23,8 +23,6 @@ import numpy as np
 
 # # NN.save("files/NN_XOR.pkl")
 
-
-
 # MNIST
 NN = NeuralNetwork()
 
@@ -69,11 +67,11 @@ while True:
             if event.key == pg.K_SPACE:
                 board.clear()
             if event.key == pg.K_RIGHT:
-                board.grid = data_inputs[np.random.randint(0, data_inputs.shape[0])].reshape(28, 28).transpose()
+                board.grid = data_inputs[np.random.randint(0, data_inputs.shape[0])].reshape(28, 28)
                 
-    prediction = NN.forward(board.grid.transpose().flatten())
+    prediction = NN.forward(board.grid.flatten())
     board.draw(screen)
     pg.draw.line(screen, (255, 255, 255), (570, 0), (570, 560), 2)
     draw_predictions(screen, prediction)
     pg.display.update()
-    clock.tick(60)
+    clock.tick(120)
