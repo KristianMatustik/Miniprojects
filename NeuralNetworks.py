@@ -80,8 +80,8 @@ class NeuralNetwork:
                 self.num_columns += kernel_size - 1
             self.shape_padded_input = (self.num_channels, self.num_rows, self.num_columns)
             output_shape = (self.num_kernels_per_channel, 
-                               (self.num_rows - self.kernel_size + 1) // self.kernel_stride, 
-                               (self.num_columns - self.kernel_size + 1) // self.kernel_stride)
+                               (self.num_rows - self.kernel_size) // self.kernel_stride + 1,
+                               (self.num_columns - self.kernel_size) // self.kernel_stride + 1) 
             super().__init__(activation_function, input_shape, output_shape)
 
         def forward(self, input):

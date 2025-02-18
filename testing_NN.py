@@ -42,18 +42,18 @@ data_inputs = data[:, 1:].astype(np.float32) / 255.0
 # NN.save("files/NN_MNIST.pkl")
 
 # # CNN
-data_inputs = data_inputs.reshape(-1, 28, 28)
-NN = NeuralNetwork()
+# data_inputs = data_inputs.reshape(-1, 28, 28)
+# NN = NeuralNetwork()
 # NN.add_Layer_Convolutional((1,28,28),5,3,1,0, NeuralNetwork.ReLU)
 # NN.add_Layer_Pooling(-1, 4, 4, "max")
 # NN.add_Layer_Convolutional(-1, 5, 3, 1, -1, NeuralNetwork.ReLU)
 # NN.add_Layer_FullyConnected(-1, 20, NeuralNetwork.ReLU)
 # NN.add_Layer_FullyConnected(-1, 10, NeuralNetwork.softmax)
 
-# NN = NeuralNetwork.load("files/NN_MNIST_CNN.pkl") #pretrained, can improve further
+# # NN = NeuralNetwork.load("files/NN_MNIST_CNN.pkl") #pretrained, can improve further
 
-# NN.train(data_inputs, data_targets, 200, 1, 0.01, 0.5, NeuralNetwork.cost_crossEntropy, True)
-# NN.save("files/NN_MNIST_CNN.pkl")
+# NN.train(data_inputs, data_targets, 16, 1, 0.05, 0.9, NeuralNetwork.cost_crossEntropy, True)
+# NN.save("files/NN_MNIST_CNN2.pkl")
 
 
 
