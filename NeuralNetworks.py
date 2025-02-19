@@ -60,7 +60,7 @@ class NeuralNetwork:
             self.weights_gradient = momentum * self.weights_gradient
             self.biases_gradient = momentum * self.biases_gradient
         
-    class Layer_Convolutional(Layer):
+    class Layer_Convolutional(Layer): #super slow, inefficient, needs optimization
         def __init__(self, input_shape, num_kernels_per_channel, kernel_size, kernel_stride, padding_type, activation_function):
             # later generalize, allow more specification: x/y for kernel_size and kernel_stride, add kernel_dilation (in x/y)
             self.num_channels = input_shape[0]
@@ -305,3 +305,13 @@ class NeuralNetwork:
                 if printEpochs:
                     print(f"Epoch {epoch+1}/{epochs}, Batch {i+1}/{n_batches}, Cost: {c}, Accuracy: {ac}")
             print(f"Epoch {epoch+1}/{epochs}, Cost: {cost/n_batches}, Accuracy: {accuracy/n_batches}")
+
+    def test(self, inputs, targets):
+        n_examples = inputs.shape[0]
+        accuracy = 0
+        for i in range(n_examples):
+            sample = inputs[i]
+            target = targets[i]
+            prediction = self.forward(sample)
+            accuracy += np.argmax(prediction) == target
+        return accuracy/n_examples
