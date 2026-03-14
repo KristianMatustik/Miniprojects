@@ -356,8 +356,9 @@ for gen in range(first, num_generations, step):
 car.set(car_x, car_y, car_v, car_a)
 fitness = run_sim(track, car, math.inf, dt_train, drivers[0], time_limit) 
 print(f"Best Driver ({num_generations-1}): {fitness}")
+print("(Riding with no time limit)")
 car.set(car_x, car_y, car_v, car_a)
 run_sim(track, car, FPS, dt_train, drivers[0]) 
-print("(Riding with no time limit)")
+
 
 pg.quit()
