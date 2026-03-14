@@ -1,3 +1,5 @@
+# small project, trying alg to detect stop words in token stream, cutting the stream at the first stop word, yielding all tokens before it (without stop word tokens)
+
 import random
 from typing import Generator
 
@@ -197,3 +199,5 @@ print(result)
 
 # more extensive testing would be nice, but I think it should work and cover considered edge cases
 # comments, naming, and code style could be improved, didnt have much time to polish it
+# one "edge case" this doesnt consider is end of words, eg. " end" would stop in all: "end.", "end ", " ending", ...
+# can be fixed by adding space/dot/... to the end of each token, adding multiple variants of each stop word to the trie
